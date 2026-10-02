@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: eve-healthcare-db
+    environment:
+      POSTGRES_DB: eve_healthcare
+      POSTGRES_USER: eve
+      POSTGRES_PASSWORD: eve
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eve -d eve_healthcare"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: eve-healthcare-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/eve_healthcare
+      DB_USERNAME: eve
+      DB_PASSWORD: eve
+      JWT_SECRET: change-this-in-production-to-a-long-random-secret
+    ports:
+      - "8080:8080"
